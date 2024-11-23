@@ -1,22 +1,26 @@
 ﻿#include <Windows.h>
+#include <cstdint>
 
 #define Assert(Expression) if (!(Expression)) {__debugbreak();}
 #define InvalidCodePath Assert(!"Invalid Code Path")
+
+typedef uint32_t u32;
+typedef uint8_t u8;
 
 struct GlobalState
 {
 	HWND windowHandle;
 	HDC deviceContext;
-	UINT frameBufferWidth;
-	UINT frameBufferHeight;
-	UINT* frameBufferPixels;
-	FLOAT curOffset;
+	u32 frameBufferWidth;
+	u32 frameBufferHeight;
+	u32* frameBufferPixels;
+	float curOffset;
 	bool isRunning;
 };
 
 static GlobalState globalState;
 
-LRESULT Win32WindowCallBack(HWND WindowHandle, UINT Message, WPARAM WParam, LPARAM LParam)
+static LRESULT Win32WindowCallBack(HWND WindowHandle, UINT Message, WPARAM WParam, LPARAM LParam)
 {
 	LRESULT Result = {};
 
@@ -62,7 +66,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		hInstance,
 		NULL);
 
-	if(!globalState.windowHandle) InvalidCodePath;
+	if (!globalState.windowHandle) InvalidCodePath;
 
 	globalState.deviceContext = GetDC(globalState.windowHandle);
 
@@ -70,7 +74,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	Assert(GetClientRect(globalState.windowHandle, &ClientRect));
 	globalState.frameBufferWidth = ClientRect.right - ClientRect.left;
 	globalState.frameBufferHeight = ClientRect.bottom - ClientRect.top;
-	globalState.frameBufferPixels = (UINT*)malloc(sizeof(UINT) * globalState.frameBufferWidth * globalState.frameBufferHeight);
+	globalState.frameBufferPixels = (unsigned int*)malloc(sizeof(unsigned int) * globalState.frameBufferWidth * globalState.frameBufferHeight);
 
 	LARGE_INTEGER BeginTime = {};
 	LARGE_INTEGER EndTime = {};
@@ -79,7 +83,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	while (globalState.isRunning)
 	{
 		Assert(QueryPerformanceCounter(&EndTime));
-		FLOAT frameTime = (FLOAT)(EndTime.QuadPart - BeginTime.QuadPart) / (FLOAT)(TimerFrequency.QuadPart);
+		float frameTime = (float)(EndTime.QuadPart - BeginTime.QuadPart) / (float)(TimerFrequency.QuadPart);
 		BeginTime = EndTime;
 
 		MSG Message = {};
@@ -96,28 +100,26 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 		}
 
-		CONST FLOAT speed = 300.0f;
+		const float speed = 300.0f;
 		globalState.curOffset += speed * frameTime;
 
-		for (UINT Y = 0; Y < globalState.frameBufferHeight; Y++)
-		{
-			for (UINT X = 0; X < globalState.frameBufferWidth; X++)
-			{
-				UINT pixedId = Y * globalState.frameBufferWidth + X;
+		for (size_t Y = 0; Y < globalState.frameBufferHeight; Y++) {
+			for (size_t X = 0; X < globalState.frameBufferWidth; X++) {
+				u32 pixelId = Y * globalState.frameBufferWidth + X;
 
-				UINT8 red = (UINT)(X) / 1.6;
-				UINT8 Green = 0;
-				UINT8 Blue = (UINT)(Y + globalState.curOffset);
-				UINT8 Alpha = 255;
-				UINT PixelColor = ((UINT)Alpha << 24) | ((UINT)red << 16) | ((UINT)Green << 8) | (UINT)Blue;
+				u8 Red = static_cast<u8>((X + globalState.curOffset));
+				u8 Green = static_cast<u8>((Y + globalState.curOffset));
+				u8 Blue = 128;
+				u8 Alpha = 255;
 
-				globalState.frameBufferPixels[pixedId] = PixelColor;
+				u32 PixelColor = (Alpha << 24) | (Red << 16) | (Green << 8) | Blue;
+				globalState.frameBufferPixels[pixelId] = PixelColor;
 			}
 		}
 
 		Assert(GetClientRect(globalState.windowHandle, &ClientRect));
-		UINT ClientWidth = ClientRect.right - ClientRect.left;
-		UINT ClientHeight = ClientRect.bottom - ClientRect.top;
+		u32 ClientWidth = ClientRect.right - ClientRect.left;
+		u32 ClientHeight = ClientRect.bottom - ClientRect.top;
 
 		BITMAPINFO BitmapInfo = {};
 		BitmapInfo.bmiHeader.biSize = sizeof(tagBITMAPINFOHEADER);
