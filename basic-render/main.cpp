@@ -38,7 +38,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	LARGE_INTEGER beginTime;
 	QueryPerformanceCounter(&beginTime);
 
-	f32 speed = 0.75f;
+	const u32 blockSize = 3;
+	const f32 speed = 0.75f;
 	f32 curAngle = -2.0f * pi;
 
 	while (graphicsContext.IsRunning())
@@ -85,8 +86,20 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 				if (PixelPos.x >= 0.0f && PixelPos.x < width &&
 					PixelPos.y >= 0.0f && PixelPos.y < height)
 				{
-					u32 PixelId = u32(PixelPos.y) * width + u32(PixelPos.x);
-					pixels[PixelId] = 0xFF00FF00;
+					u32 baseX = (u32)PixelPos.x;
+					u32 baseY = (u32)PixelPos.y;
+
+					for (u32 dy = 0; dy < blockSize; dy++)
+					{
+						for (u32 dx = 0; dx < blockSize; dx++)
+						{
+							u32 pixelX = baseX + dx;
+							u32 pixelY = baseY + dy;
+
+							if (pixelX < width && pixelY < height)
+								pixels[pixelY * width + pixelX] = 0xFF00FF00;
+						}
+					}
 				}
 			}
 		}

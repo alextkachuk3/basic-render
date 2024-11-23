@@ -8,25 +8,25 @@ V2::V2(float X, float Y) : x(X), y(Y) {}
 
 V2 V2::operator+(const V2& other) const
 {
-    return V2(x + other.x, y + other.y);
+	return V2(x + other.x, y + other.y);
 }
 
 V2 V2::operator*(float scalar) const
 {
-    return V2(x * scalar, y * scalar);
+	return V2(x * scalar, y * scalar);
 }
 
 V2 V2::operator*(const V2& other) const
 {
-    return V2(x * other.x, y * other.y);
+	return V2(x * other.x, y * other.y);
 }
 
 V2 V2::operator/(float scalar) const
 {
-    return V2(x / scalar, y / scalar);
+	return V2(x / scalar, y / scalar);
 }
 
 V2 operator*(float scalar, const V2& v2)
 {
-    return V2(scalar * v2.x, scalar * v2.y);
+	return V2(scalar * v2.x, scalar * v2.y);
 }
