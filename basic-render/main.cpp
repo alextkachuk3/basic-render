@@ -35,20 +35,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		f32 frameTime = static_cast<f32>(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
 		beginTime = endTime;
 
-		MSG message;
-		while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE))
-		{
-			if (message.message == WM_QUIT)
-			{
-				graphicsContext.SetIsRunning(false);
-			}
-			else
-			{
-				TranslateMessage(&message);
-				DispatchMessageA(&message);
-			}
-		}
-
 		f32 offset = graphicsContext.GetCurOffset() + 300.0f * frameTime;
 		graphicsContext.SetCurOffset(offset);
 
@@ -62,13 +48,14 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			{
 				u8 red = static_cast<u8>(x + offset);
 				u8 green = static_cast<u8>(y + offset);
-				u8 blue = 100;
+				u8 blue = 35;
 				u8 alpha = 255;
 				u32 color = ((u32)alpha << 24) | ((u32)red << 16) | ((u32)green << 8) | (u32)blue;
 				pixels[y * width + x] = color;
 			}
 		}
 
+		graphicsContext.ProcessSystemMessages();
 		graphicsContext.RenderFrame();
 	}
 

@@ -23,6 +23,7 @@ public:
 	void AllocateFrameBuffer();
 	void ReleaseResources();
 
+	void ProcessSystemMessages();
 	void RenderFrame();
 
 	HWND GetWindowHandle() const;
