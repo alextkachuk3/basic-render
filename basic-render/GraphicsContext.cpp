@@ -6,7 +6,7 @@ GraphicsContext::GraphicsContext()
 	frameBufferWidth(0),
 	frameBufferHeight(0),
 	frameBufferPixels(nullptr),
-	curOffset(0.0f),
+	curAngle(0.0f),
 	isRunning(false)
 {
 }
@@ -22,7 +22,7 @@ void GraphicsContext::Initialize(HINSTANCE hInstance, const char* windowTitle, i
 	windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	windowClass.lpfnWndProc = windowCallback;
 	windowClass.hInstance = hInstance;
-	windowClass.lpszClassName = "Render";
+	windowClass.lpszClassName = windowTitle;
 
 	if (!RegisterClassA(&windowClass)) InvalidCodePath;
 
@@ -84,7 +84,7 @@ void GraphicsContext::ProcessSystemMessages()
 	}
 }
 
-void GraphicsContext::RenderFrame()
+void GraphicsContext::RenderFrame() const
 {
 	RECT clientRect = {};
 	Assert(GetClientRect(windowHandle, &clientRect));
@@ -156,16 +156,6 @@ void GraphicsContext::SetFrameBufferHeight(u32 height)
 u32* GraphicsContext::GetFrameBufferPixels() const
 {
 	return frameBufferPixels;
-}
-
-float GraphicsContext::GetCurOffset() const
-{
-	return curOffset;
-}
-
-void GraphicsContext::SetCurOffset(float offset)
-{
-	curOffset = offset;
 }
 
 bool GraphicsContext::IsRunning() const

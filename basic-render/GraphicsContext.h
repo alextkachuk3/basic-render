@@ -12,7 +12,7 @@ private:
 	u32 frameBufferWidth;
 	u32 frameBufferHeight;
 	u32* frameBufferPixels;
-	float curOffset;
+	float curAngle;
 	bool isRunning;
 
 public:
@@ -24,7 +24,7 @@ public:
 	void ReleaseResources();
 
 	void ProcessSystemMessages();
-	void RenderFrame();
+	void RenderFrame() const;
 
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);
@@ -39,9 +39,6 @@ public:
 	void SetFrameBufferHeight(u32 height);
 
 	u32* GetFrameBufferPixels() const;
-
-	float GetCurOffset() const;
-	void SetCurOffset(float offset);
 
 	bool IsRunning() const;
 	void SetIsRunning(bool running);

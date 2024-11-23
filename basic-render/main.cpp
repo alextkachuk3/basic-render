@@ -1,6 +1,11 @@
 ﻿#include <Windows.h>
+#include <cmath>
 #include "AssertUtils.h"
 #include "GraphicsContext.h"
+#include "V2.h"
+#include "V3.h"
+
+static float pi = 3.14159265359f;
 
 static GraphicsContext graphicsContext;
 
@@ -17,8 +22,13 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 	}
 }
 
+static V2 ProjectPoint(V3 Pos)
+{
+	return 0.5f * (Pos.xy / Pos.z + V2(1)) * V2((f32)graphicsContext.GetFrameBufferWidth(), (f32)graphicsContext.GetFrameBufferHeight());
+}
+
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
-{	
+{
 	graphicsContext.Initialize(hInstance, "Render", 1280, 720, Win32WindowCallBack);
 	graphicsContext.SetIsRunning(true);
 
@@ -28,15 +38,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	LARGE_INTEGER beginTime;
 	QueryPerformanceCounter(&beginTime);
 
+	const u32 blockSize = 3;
+	const f32 speed = 0.75f;
+	f32 curAngle = -2.0f * pi;
+
 	while (graphicsContext.IsRunning())
 	{
 		LARGE_INTEGER endTime;
 		QueryPerformanceCounter(&endTime);
-		f32 frameTime = static_cast<f32>(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
+		f32 frameTime = (f32)(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
 		beginTime = endTime;
-
-		f32 offset = graphicsContext.GetCurOffset() + 300.0f * frameTime;
-		graphicsContext.SetCurOffset(offset);
 
 		u32* pixels = graphicsContext.GetFrameBufferPixels();
 		u32 width = graphicsContext.GetFrameBufferWidth();
@@ -46,14 +57,57 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		{
 			for (u32 x = 0; x < width; x++)
 			{
-				u8 red = static_cast<u8>(x + offset);
-				u8 green = static_cast<u8>(y + offset);
-				u8 blue = 35;
+				u8 red = 0;
+				u8 green = 0;
+				u8 blue = 0;
 				u8 alpha = 255;
 				u32 color = ((u32)alpha << 24) | ((u32)red << 16) | ((u32)green << 8) | (u32)blue;
 				pixels[y * width + x] = color;
 			}
 		}
+
+		for (u32 TriangleId = 0; TriangleId < 6; TriangleId++)
+		{
+			f32 Depth = (f32)pow(2, TriangleId + 1);
+
+			V3 Points[3] =
+			{
+				V3(-1.0f, -0.5f, Depth),
+				V3(1.0f, -0.5f, Depth),
+				V3(0.0f, 0.5f, Depth)
+			};
+
+			for (u32 PointId = 0; PointId < 3; PointId++)
+			{
+				V3 TransformedPos = Points[PointId] + V3(curAngle, 0.0f, 0.0f);
+
+				V2 PixelPos = ProjectPoint(TransformedPos);
+
+				if (PixelPos.x >= 0.0f && PixelPos.x < width &&
+					PixelPos.y >= 0.0f && PixelPos.y < height)
+				{
+					u32 baseX = (u32)PixelPos.x;
+					u32 baseY = (u32)PixelPos.y;
+
+					for (u32 dy = 0; dy < blockSize; dy++)
+					{
+						for (u32 dx = 0; dx < blockSize; dx++)
+						{
+							u32 pixelX = baseX + dx;
+							u32 pixelY = baseY + dy;
+
+							if (pixelX < width && pixelY < height)
+								pixels[pixelY * width + pixelX] = 0xFF00FF00;
+						}
+					}
+				}
+			}
+		}
+
+		curAngle += frameTime * speed;
+
+		if (curAngle >= 2.0f * pi)
+			curAngle -= 4.0f * pi;
 
 		graphicsContext.ProcessSystemMessages();
 		graphicsContext.RenderFrame();

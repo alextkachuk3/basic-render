@@ -129,11 +129,15 @@
   <ItemGroup>
     <ClCompile Include="GraphicsContext.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="V2.cpp" />
+    <ClCompile Include="V3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssertUtils.h" />
     <ClInclude Include="GraphicsContext.h" />
     <ClInclude Include="Typedefs.h" />
+    <ClInclude Include="V2.h" />
+    <ClInclude Include="V3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
