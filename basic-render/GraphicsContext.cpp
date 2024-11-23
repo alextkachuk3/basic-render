@@ -84,7 +84,7 @@ void GraphicsContext::ProcessSystemMessages()
 	}
 }
 
-void GraphicsContext::RenderFrame()
+void GraphicsContext::RenderFrame() const
 {
 	RECT clientRect = {};
 	Assert(GetClientRect(windowHandle, &clientRect));

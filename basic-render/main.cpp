@@ -9,13 +9,6 @@ static float pi = 3.14159265359f;
 
 static GraphicsContext graphicsContext;
 
-V2 ProjectPoint(V3 Pos)
-{
-	V2 Result = Pos.xy / Pos.z;
-	Result = 0.5f * (Result + V2(1)) * V2((float)graphicsContext.GetFrameBufferWidth(), (float)graphicsContext.GetFrameBufferHeight());
-	return Result;
-}
-
 static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
@@ -29,6 +22,11 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 	}
 }
 
+static V2 ProjectPoint(V3 Pos)
+{
+	return 0.5f * (Pos.xy / Pos.z + V2(1)) * V2((f32)graphicsContext.GetFrameBufferWidth(), (f32)graphicsContext.GetFrameBufferHeight());
+}
+
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
 	graphicsContext.Initialize(hInstance, "Render", 1280, 720, Win32WindowCallBack);
@@ -39,6 +37,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	LARGE_INTEGER beginTime;
 	QueryPerformanceCounter(&beginTime);
+
+	f32 speed = 0.75f;
+	f32 curAngle = -2.0f * pi;
 
 	while (graphicsContext.IsRunning())
 	{
@@ -64,9 +65,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 		}
 
-		for (int TriangleId = 0; TriangleId < 6; TriangleId++)
+		for (u32 TriangleId = 0; TriangleId < 6; TriangleId++)
 		{
-			float Depth = powf(2, TriangleId + 1);
+			f32 Depth = (f32)pow(2, TriangleId + 1);
 
 			V3 Points[3] =
 			{
@@ -75,20 +76,25 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 				V3(0.0f, 0.5f, Depth)
 			};
 
-			for (int PointId = 0; PointId < 3; PointId++)
+			for (u32 PointId = 0; PointId < 3; PointId++)
 			{
-				V3 TransformedPos = Points[PointId];
+				V3 TransformedPos = Points[PointId] + V3(curAngle, 0.0f, 0.0f);
 
 				V2 PixelPos = ProjectPoint(TransformedPos);
 
 				if (PixelPos.x >= 0.0f && PixelPos.x < width &&
 					PixelPos.y >= 0.0f && PixelPos.y < height)
 				{
-					int PixelId = int(PixelPos.y) * width + int(PixelPos.x);
+					u32 PixelId = u32(PixelPos.y) * width + u32(PixelPos.x);
 					pixels[PixelId] = 0xFF00FF00;
 				}
 			}
 		}
+
+		curAngle += frameTime * speed;
+
+		if (curAngle >= 2.0f * pi)
+			curAngle -= 4.0f * pi;
 
 		graphicsContext.ProcessSystemMessages();
 		graphicsContext.RenderFrame();

@@ -24,7 +24,7 @@ public:
 	void ReleaseResources();
 
 	void ProcessSystemMessages();
-	void RenderFrame();
+	void RenderFrame() const;
 
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);
