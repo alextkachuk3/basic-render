@@ -32,7 +32,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	{
 		LARGE_INTEGER endTime;
 		QueryPerformanceCounter(&endTime);
-		float frameTime = static_cast<float>(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
+		f32 frameTime = static_cast<f32>(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
 		beginTime = endTime;
 
 		MSG message;
@@ -49,19 +49,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 		}
 
-		float offset = graphicsContext.GetCurOffset() + 300.0f * frameTime;
+		f32 offset = graphicsContext.GetCurOffset() + 300.0f * frameTime;
 		graphicsContext.SetCurOffset(offset);
 
 		u32* pixels = graphicsContext.GetFrameBufferPixels();
 		u32 width = graphicsContext.GetFrameBufferWidth();
 		u32 height = graphicsContext.GetFrameBufferHeight();
 
-		for (size_t y = 0; y < height; y++)
+		for (u32 y = 0; y < height; y++)
 		{
-			for (size_t x = 0; x < width; x++)
+			for (u32 x = 0; x < width; x++)
 			{
-				u8 red = static_cast<uint8_t>(x + offset);
-				u8 green = static_cast<uint8_t>(y + offset);
+				u8 red = static_cast<u8>(x + offset);
+				u8 green = static_cast<u8>(y + offset);
 				u8 blue = 100;
 				u8 alpha = 255;
 				u32 color = ((u32)alpha << 24) | ((u32)red << 16) | ((u32)green << 8) | (u32)blue;
