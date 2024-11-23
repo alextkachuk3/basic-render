@@ -1,56 +1,35 @@
 ﻿#include <Windows.h>
-#include <cstdint>
-
-#define Assert(Expression) if (!(Expression)) {__debugbreak();}
-#define InvalidCodePath Assert(!"Invalid Code Path")
-
-typedef uint32_t u32;
-typedef uint8_t u8;
-
-struct GlobalState
-{
-	HWND windowHandle;
-	HDC deviceContext;
-	u32 frameBufferWidth;
-	u32 frameBufferHeight;
-	u32* frameBufferPixels;
-	float curOffset;
-	bool isRunning;
-};
+#include "AssertUtils.h"
+#include "GlobalState.h"
 
 static GlobalState globalState;
 
-static LRESULT Win32WindowCallBack(HWND WindowHandle, UINT Message, WPARAM WParam, LPARAM LParam)
+static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT Result = {};
-
-	switch (Message)
+	switch (message)
 	{
 	case WM_DESTROY:
 	case WM_CLOSE:
-		globalState.isRunning = false;
-		break;
+		globalState.SetIsRunning(false);
+		return 0;
 	default:
-		Result = DefWindowProcA(WindowHandle, Message, WParam, LParam);
+		return DefWindowProcA(windowHandle, message, wParam, lParam);
 	}
-
-	return Result;
 }
 
-void InitializeWindow(HINSTANCE hInstance)
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
-	WNDCLASSA WindowClass = {};
-	WindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-	WindowClass.lpfnWndProc = Win32WindowCallBack;
-	WindowClass.hInstance = hInstance;
-	WindowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-	WindowClass.lpszClassName = "Render";
+	WNDCLASSA windowClass = {};
+	windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+	windowClass.lpfnWndProc = Win32WindowCallBack;
+	windowClass.hInstance = hInstance;
+	windowClass.lpszClassName = "Render";
 
-	Assert(RegisterClassA(&WindowClass));
+	if (!RegisterClassA(&windowClass)) InvalidCodePath;
 
-	globalState.windowHandle = CreateWindowExA(
+	HWND windowHandle = CreateWindowExA(
 		0,
-		WindowClass.lpszClassName,
+		windowClass.lpszClassName,
 		"Render",
 		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
 		CW_USEDEFAULT,
@@ -60,119 +39,97 @@ void InitializeWindow(HINSTANCE hInstance)
 		NULL,
 		NULL,
 		hInstance,
-		NULL
-	);
+		NULL);
 
-	Assert(globalState.windowHandle);
+	if (!windowHandle) InvalidCodePath;
 
-	globalState.deviceContext = GetDC(globalState.windowHandle);
-}
+	HDC deviceContext = GetDC(windowHandle);
 
-void InitializeFrameBuffer()
-{
-	RECT ClientRect = {};
-	Assert(GetClientRect(globalState.windowHandle, &ClientRect));
+	RECT clientRect;
+	GetClientRect(windowHandle, &clientRect);
+	uint32_t frameBufferWidth = clientRect.right - clientRect.left;
+	uint32_t frameBufferHeight = clientRect.bottom - clientRect.top;
 
-	globalState.frameBufferWidth = ClientRect.right - ClientRect.left;
-	globalState.frameBufferHeight = ClientRect.bottom - ClientRect.top;
-	globalState.frameBufferPixels = (u32*)malloc(sizeof(u32) * globalState.frameBufferWidth * globalState.frameBufferHeight);
+	globalState.Initialize(windowHandle, deviceContext, frameBufferWidth, frameBufferHeight);
+	globalState.SetIsRunning(true);
 
-	Assert(globalState.frameBufferPixels);
-}
+	LARGE_INTEGER timerFrequency;
+	QueryPerformanceFrequency(&timerFrequency);
 
-void UpdateFrame(float frameTime)
-{
-	const float speed = 300.0f;
-	globalState.curOffset += speed * frameTime;
+	LARGE_INTEGER beginTime;
+	QueryPerformanceCounter(&beginTime);
 
-	for (size_t Y = 0; Y < globalState.frameBufferHeight; Y++)
+	while (globalState.IsRunning())
 	{
-		for (size_t X = 0; X < globalState.frameBufferWidth; X++)
+		LARGE_INTEGER endTime;
+		QueryPerformanceCounter(&endTime);
+		float frameTime = static_cast<float>(endTime.QuadPart - beginTime.QuadPart) / timerFrequency.QuadPart;
+		beginTime = endTime;
+
+		MSG message;
+		while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE))
 		{
-			u32 pixelId = Y * globalState.frameBufferWidth + X;
-
-			u8 Red = static_cast<u8>((X + globalState.curOffset));
-			u8 Green = static_cast<u8>((Y + globalState.curOffset));
-			u8 Blue = 128;
-			u8 Alpha = 255;
-
-			u32 PixelColor = (Alpha << 24) | (Red << 16) | (Green << 8) | Blue;
-			globalState.frameBufferPixels[pixelId] = PixelColor;
-		}
-	}
-}
-
-void RenderFrame()
-{
-	RECT ClientRect = {};
-	Assert(GetClientRect(globalState.windowHandle, &ClientRect));
-	u32 ClientWidth = ClientRect.right - ClientRect.left;
-	u32 ClientHeight = ClientRect.bottom - ClientRect.top;
-
-	BITMAPINFO BitmapInfo = {};
-	BitmapInfo.bmiHeader.biSize = sizeof(tagBITMAPINFOHEADER);
-	BitmapInfo.bmiHeader.biWidth = globalState.frameBufferWidth;
-	BitmapInfo.bmiHeader.biHeight = globalState.frameBufferHeight;
-	BitmapInfo.bmiHeader.biPlanes = 1;
-	BitmapInfo.bmiHeader.biBitCount = 32;
-	BitmapInfo.bmiHeader.biCompression = BI_RGB;
-
-	Assert(StretchDIBits(
-		globalState.deviceContext,
-		0,
-		0,
-		ClientWidth,
-		ClientHeight,
-		0,
-		0,
-		globalState.frameBufferWidth,
-		globalState.frameBufferHeight,
-		globalState.frameBufferPixels,
-		&BitmapInfo,
-		DIB_RGB_COLORS,
-		SRCCOPY
-	));
-}
-
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PSTR lpCmdLine, _In_ int nCmdShow)
-{
-	globalState.isRunning = true;
-	LARGE_INTEGER TimerFrequency = {};
-	Assert(QueryPerformanceFrequency(&TimerFrequency));
-
-	InitializeWindow(hInstance);
-	InitializeFrameBuffer();
-
-	LARGE_INTEGER BeginTime = {};
-	LARGE_INTEGER EndTime = {};
-	Assert(QueryPerformanceCounter(&BeginTime));
-
-	while (globalState.isRunning)
-	{
-		Assert(QueryPerformanceCounter(&EndTime));
-		float frameTime = (float)(EndTime.QuadPart - BeginTime.QuadPart) / (float)(TimerFrequency.QuadPart);
-		BeginTime = EndTime;
-
-		MSG Message = {};
-		while (PeekMessageA(&Message, globalState.windowHandle, 0, 0, PM_REMOVE))
-		{
-			switch (Message.message)
+			if (message.message == WM_QUIT)
 			{
-			case WM_QUIT:
-				globalState.isRunning = false;
-				break;
-			default:
-				TranslateMessage(&Message);
-				DispatchMessageA(&Message);
+				globalState.SetIsRunning(false);
+			}
+			else
+			{
+				TranslateMessage(&message);
+				DispatchMessageA(&message);
 			}
 		}
 
-		UpdateFrame(frameTime);
-		RenderFrame();
+		float offset = globalState.GetCurOffset() + 300.0f * frameTime;
+		globalState.SetCurOffset(offset);
+
+		u32* pixels = globalState.GetFrameBufferPixels();
+		u32 width = globalState.GetFrameBufferWidth();
+		u32 height = globalState.GetFrameBufferHeight();
+
+		for (uint32_t y = 0; y < height; y++)
+		{
+			for (uint32_t x = 0; x < width; x++)
+			{
+				u8 red = static_cast<uint8_t>(x + offset);
+				u8 green = static_cast<uint8_t>(y + offset);
+				u8 blue = 100;
+				u8 alpha = 255;
+				u32 color = ((u32)alpha << 24) | ((u32)red << 16) | ((u32)green << 8) | (u32)blue;
+				pixels[y * width + x] = color;
+			}
+		}
+
+		RECT ClientRect = {};
+		Assert(GetClientRect(globalState.GetWindowHandle(), &ClientRect));
+		u32 ClientWidth = ClientRect.right - ClientRect.left;
+		u32 ClientHeight = ClientRect.bottom - ClientRect.top;
+
+		BITMAPINFO BitmapInfo = {};
+		BitmapInfo.bmiHeader.biSize = sizeof(tagBITMAPINFOHEADER);
+		BitmapInfo.bmiHeader.biWidth = globalState.GetFrameBufferWidth();
+		BitmapInfo.bmiHeader.biHeight = globalState.GetFrameBufferHeight();
+		BitmapInfo.bmiHeader.biPlanes = 1;
+		BitmapInfo.bmiHeader.biBitCount = 32;
+		BitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+		Assert(StretchDIBits(
+			globalState.GetDeviceContext(),
+			0,
+			0,
+			ClientWidth,
+			ClientHeight,
+			0,
+			0,
+			globalState.GetFrameBufferWidth(),
+			globalState.GetFrameBufferHeight(),
+			globalState.GetFrameBufferPixels(),
+			&BitmapInfo,
+			DIB_RGB_COLORS,
+			SRCCOPY
+		));
 	}
 
-	ReleaseDC(globalState.windowHandle, globalState.deviceContext);
-	free(globalState.frameBufferPixels);
-
+	globalState.ReleaseResources();
 	return 0;
 }

@@ -26,5 +26,11 @@
     <ClInclude Include="GlobalState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AssertUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Typedefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
