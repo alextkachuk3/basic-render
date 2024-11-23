@@ -69,6 +69,21 @@ void GraphicsContext::ReleaseResources()
 	}
 }
 
+void GraphicsContext::ProcessSystemMessages()
+{
+	MSG message;
+	while (PeekMessageA(&message, windowHandle, 0, 0, PM_REMOVE))
+	{
+		if (message.message == WM_QUIT)
+			SetIsRunning(false);
+		else
+		{
+			TranslateMessage(&message);
+			DispatchMessageA(&message);
+		}
+	}
+}
+
 void GraphicsContext::RenderFrame()
 {
 	RECT clientRect = {};
