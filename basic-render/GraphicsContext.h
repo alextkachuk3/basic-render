@@ -4,7 +4,7 @@
 #include "Typedefs.h"
 #include "AssertUtils.h"
 
-class GlobalState
+class GraphicsContext
 {
 private:
 	HWND windowHandle;
@@ -16,12 +16,14 @@ private:
 	bool isRunning;
 
 public:
-	GlobalState();
-	~GlobalState();
+	GraphicsContext();
+	~GraphicsContext();
 
 	void Initialize(HINSTANCE hInstance, const char* windowTitle, int width, int height, WNDPROC windowCallback);
 	void AllocateFrameBuffer();
 	void ReleaseResources();
+
+	void RenderFrame();
 
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);
