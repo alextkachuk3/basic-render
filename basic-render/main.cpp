@@ -18,39 +18,8 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 }
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
-{
-	WNDCLASSA windowClass = {};
-	windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-	windowClass.lpfnWndProc = Win32WindowCallBack;
-	windowClass.hInstance = hInstance;
-	windowClass.lpszClassName = "Render";
-
-	if (!RegisterClassA(&windowClass)) InvalidCodePath;
-
-	HWND windowHandle = CreateWindowExA(
-		0,
-		windowClass.lpszClassName,
-		"Render",
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		1280,
-		720,
-		NULL,
-		NULL,
-		hInstance,
-		NULL);
-
-	if (!windowHandle) InvalidCodePath;
-
-	HDC deviceContext = GetDC(windowHandle);
-
-	RECT clientRect;
-	GetClientRect(windowHandle, &clientRect);
-	uint32_t frameBufferWidth = clientRect.right - clientRect.left;
-	uint32_t frameBufferHeight = clientRect.bottom - clientRect.top;
-
-	globalState.Initialize(windowHandle, deviceContext, frameBufferWidth, frameBufferHeight);
+{	
+	globalState.Initialize(hInstance, "Render", 1280, 720, Win32WindowCallBack);
 	globalState.SetIsRunning(true);
 
 	LARGE_INTEGER timerFrequency;

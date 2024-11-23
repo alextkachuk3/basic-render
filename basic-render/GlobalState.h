@@ -7,39 +7,39 @@
 class GlobalState
 {
 private:
-    HWND windowHandle;
-    HDC deviceContext;
-    u32 frameBufferWidth;
-    u32 frameBufferHeight;
-    u32* frameBufferPixels;
-    float curOffset;
-    bool isRunning;
+	HWND windowHandle;
+	HDC deviceContext;
+	u32 frameBufferWidth;
+	u32 frameBufferHeight;
+	u32* frameBufferPixels;
+	float curOffset;
+	bool isRunning;
 
 public:
-    GlobalState();
-    ~GlobalState();
+	GlobalState();
+	~GlobalState();
 
-    void Initialize(HWND windowHandle, HDC deviceContext, u32 frameBufferWidth, u32 frameBufferHeight);
-    void AllocateFrameBuffer();
-    void ReleaseResources();
+	void Initialize(HINSTANCE hInstance, const char* windowTitle, int width, int height, WNDPROC windowCallback);
+	void AllocateFrameBuffer();
+	void ReleaseResources();
 
-    HWND GetWindowHandle() const;
-    void SetWindowHandle(HWND handle);
+	HWND GetWindowHandle() const;
+	void SetWindowHandle(HWND handle);
 
-    HDC GetDeviceContext() const;
-    void SetDeviceContext(HDC context);
+	HDC GetDeviceContext() const;
+	void SetDeviceContext(HDC context);
 
-    u32 GetFrameBufferWidth() const;
-    void SetFrameBufferWidth(u32 width);
+	u32 GetFrameBufferWidth() const;
+	void SetFrameBufferWidth(u32 width);
 
-    u32 GetFrameBufferHeight() const;
-    void SetFrameBufferHeight(u32 height);
+	u32 GetFrameBufferHeight() const;
+	void SetFrameBufferHeight(u32 height);
 
-    u32* GetFrameBufferPixels() const;
+	u32* GetFrameBufferPixels() const;
 
-    float GetCurOffset() const;
-    void SetCurOffset(float offset);
+	float GetCurOffset() const;
+	void SetCurOffset(float offset);
 
-    bool IsRunning() const;
-    void SetIsRunning(bool running);
+	bool IsRunning() const;
+	void SetIsRunning(bool running);
 };
