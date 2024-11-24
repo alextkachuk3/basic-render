@@ -1,22 +1,27 @@
 #pragma once
 
+#include "Typedefs.h"
+
 union V2
 {
 	struct
 	{
-		float x, y;
+		f32 x, y;
 	};
 
-	float e[2];
+	f32 e[2];
 
 	V2();
-	V2(float value);
-	V2(float X, float Y);
+	V2(f32 value);
+	V2(f32 X, f32 Y);
 
 	V2 operator+(const V2& other) const;
-	V2 operator*(float scalar) const;
+	V2 operator-(const V2& other) const;
+	V2 operator*(f32 scalar) const;
 	V2 operator*(const V2& other) const;
-	V2 operator/(float scalar) const;
+	V2 operator/(f32 scalar) const;
 
-	friend V2 operator*(float scalar, const V2& v2);
+	friend V2 operator*(f32 scalar, const V2& v2);
+
+	static f32 CrossProduct2d(V2 A, V2 B);
 };

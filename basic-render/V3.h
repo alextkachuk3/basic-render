@@ -5,13 +5,13 @@ union V3
 {
 	struct
 	{
-		float x, y, z;
+		f32 x, y, z;
 	};
 
 	struct
 	{
 		V2 xy;
-		float Ignored0;
+		f32 Ignored0;
 	};
 
 	struct
@@ -20,10 +20,10 @@ union V3
 		V2 yz;
 	};
 
-	float e[3];
+	f32 e[3];
 
 	V3();
-	V3(float X, float Y, float Z);
+	V3(f32 X, f32 Y, f32 Z);
 
 	V3 operator+(const V3& other) const;
 	V2 getXY() const;

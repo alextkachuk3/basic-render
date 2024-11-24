@@ -1,11 +1,12 @@
 ﻿#include <Windows.h>
 #include <cmath>
+#include <vector>
 #include "AssertUtils.h"
 #include "GraphicsContext.h"
 #include "V2.h"
 #include "V3.h"
 
-static float pi = 3.14159265359f;
+static const f32 pi = 3.14159265359f;
 
 static GraphicsContext graphicsContext;
 
@@ -22,11 +23,6 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 	}
 }
 
-static V2 ProjectPoint(V3 Pos)
-{
-	return 0.5f * (Pos.xy / Pos.z + V2(1)) * V2((f32)graphicsContext.GetFrameBufferWidth(), (f32)graphicsContext.GetFrameBufferHeight());
-}
-
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
 	graphicsContext.Initialize(hInstance, "Render", 1280, 720, Win32WindowCallBack);
@@ -40,7 +36,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	const u32 blockSize = 3;
 	const f32 speed = 0.75f;
-	f32 curAngle = -2.0f * pi;
+	f32 currentTime = -2.0f * pi;
 
 	while (graphicsContext.IsRunning())
 	{
@@ -66,48 +62,36 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 		}
 
-		for (u32 TriangleId = 0; TriangleId < 6; TriangleId++)
+		std::vector<u32> colors =
 		{
-			f32 Depth = (f32)pow(2, TriangleId + 1);
+			0xFF00FF00,
+			0xFFFF00FF,
+			0xFF0000FF,
+		};
 
-			V3 Points[3] =
+		for (i32 triangleIndex = 9; triangleIndex >= 0; triangleIndex--)
+		{
+			f32 distanceToCamera = (f32)pow(2, triangleIndex + 1);
+			V3 points[3] =
 			{
-				V3(-1.0f, -0.5f, Depth),
-				V3(1.0f, -0.5f, Depth),
-				V3(0.0f, 0.5f, Depth)
+				V3(-1.0f, -0.5f, distanceToCamera),
+				V3(0, 0.5f, distanceToCamera),
+				V3(1.0f, -0.5f, distanceToCamera),
 			};
 
-			for (u32 PointId = 0; PointId < 3; PointId++)
+			for (u32 pointIndex = 0; pointIndex < 3; pointIndex++)
 			{
-				V3 TransformedPos = Points[PointId] + V3(curAngle, 0.0f, 0.0f);
-
-				V2 PixelPos = ProjectPoint(TransformedPos);
-
-				if (PixelPos.x >= 0.0f && PixelPos.x < width &&
-					PixelPos.y >= 0.0f && PixelPos.y < height)
-				{
-					u32 baseX = (u32)PixelPos.x;
-					u32 baseY = (u32)PixelPos.y;
-
-					for (u32 dy = 0; dy < blockSize; dy++)
-					{
-						for (u32 dx = 0; dx < blockSize; dx++)
-						{
-							u32 pixelX = baseX + dx;
-							u32 pixelY = baseY + dy;
-
-							if (pixelX < width && pixelY < height)
-								pixels[pixelY * width + pixelX] = 0xFF00FF00;
-						}
-					}
-				}
+				V3 shiftedPoint = points[pointIndex] + V3(currentTime, 0.0f, 0.0f);
+				points[pointIndex] = shiftedPoint;
 			}
+
+			graphicsContext.DrawTriangle(points, colors[triangleIndex % colors.size()]);
 		}
 
-		curAngle += frameTime * speed;
+		currentTime += frameTime * speed;
 
-		if (curAngle >= 2.0f * pi)
-			curAngle -= 4.0f * pi;
+		if (currentTime >= 2.0f * pi)
+			currentTime = -2.0f * pi;
 
 		graphicsContext.ProcessSystemMessages();
 		graphicsContext.RenderFrame();

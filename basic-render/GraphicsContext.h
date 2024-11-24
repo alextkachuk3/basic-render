@@ -1,8 +1,11 @@
 #pragma once
 
 #include <Windows.h>
+#include <cmath>
 #include "Typedefs.h"
 #include "AssertUtils.h"
+#include "V2.h"
+#include "V3.h"
 
 class GraphicsContext
 {
@@ -22,9 +25,11 @@ public:
 	void Initialize(HINSTANCE hInstance, const char* windowTitle, int width, int height, WNDPROC windowCallback);
 	void AllocateFrameBuffer();
 	void ReleaseResources();
-
 	void ProcessSystemMessages();
+
 	void RenderFrame() const;
+	V2 ProjectPoint(V3 pos) const;
+	void DrawTriangle(const V3* points, u32 pixelColor);
 
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);
