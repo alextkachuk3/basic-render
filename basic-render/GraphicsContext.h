@@ -29,7 +29,7 @@ public:
 
 	void RenderFrame() const;
 	V2 ProjectPoint(V3 pos) const;
-	void DrawTriangle(const V3* points, u32 pixelColor);
+	void DrawTriangle(const V3* points, const V3* colors) const;
 
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);

@@ -31,7 +31,7 @@ V2 V2::operator/(f32 scalar) const
 	return V2(x / scalar, y / scalar);
 }
 
-f32 V2::CrossProduct2d(V2 A, V2 B)
+f32 V2::CrossProduct(V2 A, V2 B)
 {
 	return A.x * B.y - A.y * B.x;
 }

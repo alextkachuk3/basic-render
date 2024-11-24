@@ -23,5 +23,5 @@ union V2
 
 	friend V2 operator*(f32 scalar, const V2& v2);
 
-	static f32 CrossProduct2d(V2 A, V2 B);
+	static f32 CrossProduct(V2 A, V2 B);
 };

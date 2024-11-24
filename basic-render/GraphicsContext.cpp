@@ -117,46 +117,78 @@ V2 GraphicsContext::ProjectPoint(V3 pos) const
 	return 0.5f * (pos.xy / pos.z + V2(1)) * V2((f32)GetFrameBufferWidth(), (f32)GetFrameBufferHeight());
 }
 
-void GraphicsContext::DrawTriangle(const V3* points, u32 pixelColor)
+void GraphicsContext::DrawTriangle(const V3* points, const V3* colors) const
 {
 	V2 pointA = ProjectPoint(points[0]);
 	V2 pointB = ProjectPoint(points[1]);
 	V2 pointC = ProjectPoint(points[2]);
 
-	V2 edge0 = pointB - pointA;
-	V2 edge1 = pointC - pointB;
-	V2 edge2 = pointA - pointC;
+	i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);
+	i32 maxX = (i32)max(max(round(pointA.x), round(pointB.x)), round(pointC.x));
+	i32 minY = (i32)min(min(pointA.y, pointB.y), pointC.y);
+	i32 maxY = (i32)max(max(round(pointA.y), round(pointB.y)), round(pointC.y));
 
-	bool isTopLeft0 = (edge0.x >= 0.0f && edge0.y > 0.0f) || (edge0.x > 0.0f && edge0.y == 0.0f);
-	bool isTopLeft1 = (edge1.x >= 0.0f && edge1.y > 0.0f) || (edge1.x > 0.0f && edge1.y == 0.0f);
-	bool isTopLeft2 = (edge2.x >= 0.0f && edge2.y > 0.0f) || (edge2.x > 0.0f && edge2.y == 0.0f);
+	minX = max(0, minX);
+	minX = min(frameBufferWidth - 1, minX);
+	maxX = max(0, maxX);
+	maxX = min(frameBufferWidth - 1, maxX);
+	minY = max(0, minY);
+	minY = min(frameBufferHeight - 1, minY);
+	maxY = max(0, maxY);
+	maxY = min(frameBufferHeight - 1, maxY);
 
-	for (u32 y = 0; y < GetFrameBufferHeight(); y++)
+	V2 edges[] =
 	{
-		for (u32 x = 0; x < GetFrameBufferWidth(); x++)
+		pointB - pointA,
+		pointC - pointB,
+		pointA - pointC
+	};
+
+	bool isTopLeft[] =
+	{
+		(edges[0].x >= 0.0f && edges[0].y > 0.0f) || (edges[0].x > 0.0f && edges[0].y == 0.0f),
+		(edges[1].x >= 0.0f && edges[1].y > 0.0f) || (edges[1].x > 0.0f && edges[1].y == 0.0f),
+		(edges[2].x >= 0.0f && edges[2].y > 0.0f) || (edges[2].x > 0.0f && edges[2].y == 0.0f)
+	};
+
+	f32 barycentricDiv = V2::CrossProduct(pointB - pointA, pointC - pointA);
+
+	for (i32 Y = minY; Y <= maxY; ++Y)
+	{
+		for (i32 X = minX; X <= maxX; ++X)
 		{
-			V2 pixelPoint = V2(x, y) + V2(0.5f, 0.5f);
+			V2 pixelPoint = V2(X, Y) + V2(0.5f, 0.5f);
 
-			V2 pixelEdge0 = pixelPoint - pointA;
-			V2 pixelEdge1 = pixelPoint - pointB;
-			V2 pixelEdge2 = pixelPoint - pointC;
-
-			f32 crossLength0 = V2::CrossProduct2d(pixelEdge0, edge0);
-			f32 crossLength1 = V2::CrossProduct2d(pixelEdge1, edge1);
-			f32 crossLength2 = V2::CrossProduct2d(pixelEdge2, edge2);
-
-			if ((crossLength0 > 0.0f || (isTopLeft0 && crossLength0 == 0.0f)) &&
-				(crossLength1 > 0.0f || (isTopLeft1 && crossLength1 == 0.0f)) &&
-				(crossLength2 > 0.0f || (isTopLeft2 && crossLength2 == 0.0f)))
+			V2 pixelEdges[] =
 			{
-				u32 pixelId = y * GetFrameBufferWidth() + x;
-				GetFrameBufferPixels()[pixelId] = pixelColor;
+				pixelPoint - pointA,
+				pixelPoint - pointB,
+				pixelPoint - pointC
+			};
+
+			f32 crossLengths[] =
+			{
+				V2::CrossProduct(pixelEdges[0], edges[0]),
+				V2::CrossProduct(pixelEdges[1], edges[1]),
+				V2::CrossProduct(pixelEdges[2], edges[2])
+			};
+
+			if ((crossLengths[0] > 0.0f || (isTopLeft[0] && crossLengths[0] == 0.0f)) &&
+				(crossLengths[1] > 0.0f || (isTopLeft[1] && crossLengths[1] == 0.0f)) &&
+				(crossLengths[2] > 0.0f || (isTopLeft[2] && crossLengths[2] == 0.0f)))
+			{
+				u32 pixelId = Y * frameBufferWidth + X;
+
+				f32 t0 = -crossLengths[1] / barycentricDiv;
+				f32 t1 = -crossLengths[2] / barycentricDiv;
+				f32 t2 = -crossLengths[0] / barycentricDiv;
+				V3 finalColor = (t0 * colors[0] + t1 * colors[1] + t2 * colors[2]) * 255.0f;
+
+				frameBufferPixels[pixelId] = ((u32)0xFF << 24) | ((u32)finalColor.r << 16) | ((u32)finalColor.g << 8) | (u32)finalColor.b;
 			}
 		}
 	}
 }
-
-
 
 HWND GraphicsContext::GetWindowHandle() const
 {
