@@ -9,6 +9,50 @@ static float pi = 3.14159265359f;
 
 static GraphicsContext graphicsContext;
 
+static V2 ProjectPoint(V3 Pos)
+{
+	return 0.5f * (Pos.xy / Pos.z + V2(1)) * V2((f32)graphicsContext.GetFrameBufferWidth(), (f32)graphicsContext.GetFrameBufferHeight());
+}
+
+void DrawTriangle(V3* Points, u32 PixelColor)
+{
+	V2 PointA = ProjectPoint(Points[0]);
+	V2 PointB = ProjectPoint(Points[1]);
+	V2 PointC = ProjectPoint(Points[2]);
+
+	V2 Edge0 = PointB - PointA;
+	V2 Edge1 = PointC - PointB;
+	V2 Edge2 = PointA - PointC;
+
+	bool IsTopLeft0 = (Edge0.x >= 0.0f && Edge0.y > 0.0f) || (Edge0.x > 0.0f && Edge0.y == 0.0f);
+	bool IsTopLeft1 = (Edge1.x >= 0.0f && Edge1.y > 0.0f) || (Edge1.x > 0.0f && Edge1.y == 0.0f);
+	bool IsTopLeft2 = (Edge2.x >= 0.0f && Edge2.y > 0.0f) || (Edge2.x > 0.0f && Edge2.y == 0.0f);
+
+	for (u32 y = 0; y < graphicsContext.GetFrameBufferHeight(); y++)
+	{
+		for (u32 x = 0; x < graphicsContext.GetFrameBufferWidth(); x++)
+		{
+			V2 PixelPoint = V2(x, y) + V2(0.5f, 0.5f);
+
+			V2 PixelEdge0 = PixelPoint - PointA;
+			V2 PixelEdge1 = PixelPoint - PointB;
+			V2 PixelEdge2 = PixelPoint - PointC;
+
+			f32 CrossLength0 = V2::CrossProduct2d(PixelEdge0, Edge0);
+			f32 CrossLength1 = V2::CrossProduct2d(PixelEdge1, Edge1);
+			f32 CrossLength2 = V2::CrossProduct2d(PixelEdge2, Edge2);
+
+			if ((CrossLength0 > 0.0f || (IsTopLeft0 && CrossLength0 == 0.0f)) &&
+				(CrossLength1 > 0.0f || (IsTopLeft1 && CrossLength1 == 0.0f)) &&
+				(CrossLength2 > 0.0f || (IsTopLeft2 && CrossLength2 == 0.0f)))
+			{
+				u32 PixelId = y * graphicsContext.GetFrameBufferWidth() + x;
+				graphicsContext.GetFrameBufferPixels()[PixelId] = PixelColor;
+			}
+		}
+	}
+}
+
 static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
@@ -20,11 +64,6 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 	default:
 		return DefWindowProcA(windowHandle, message, wParam, lParam);
 	}
-}
-
-static V2 ProjectPoint(V3 Pos)
-{
-	return 0.5f * (Pos.xy / Pos.z + V2(1)) * V2((f32)graphicsContext.GetFrameBufferWidth(), (f32)graphicsContext.GetFrameBufferHeight());
 }
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
@@ -40,7 +79,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	const u32 blockSize = 3;
 	const f32 speed = 0.75f;
-	f32 curAngle = -2.0f * pi;
+	f32 currentTime = -2.0f * pi;
 
 	while (graphicsContext.IsRunning())
 	{
@@ -66,48 +105,36 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 		}
 
-		for (u32 TriangleId = 0; TriangleId < 6; TriangleId++)
+		u32 Colors[] =
 		{
-			f32 Depth = (f32)pow(2, TriangleId + 1);
+			0xFF00FF00,
+			0xFFFF00FF,
+			0xFF0000FF,
+		};
 
+		for (i32 TriangleId = 9; TriangleId >= 0; --TriangleId)
+		{
+			f32 DistToCamera = powf(2.0f, TriangleId + 1);
 			V3 Points[3] =
 			{
-				V3(-1.0f, -0.5f, Depth),
-				V3(1.0f, -0.5f, Depth),
-				V3(0.0f, 0.5f, Depth)
+				V3(-1.0f, -0.5f, DistToCamera),
+				V3(0, 0.5f, DistToCamera),
+				V3(1.0f, -0.5f, DistToCamera),
 			};
 
-			for (u32 PointId = 0; PointId < 3; PointId++)
+			for (u32 PointId = 0; PointId < 3; ++PointId)
 			{
-				V3 TransformedPos = Points[PointId] + V3(curAngle, 0.0f, 0.0f);
-
-				V2 PixelPos = ProjectPoint(TransformedPos);
-
-				if (PixelPos.x >= 0.0f && PixelPos.x < width &&
-					PixelPos.y >= 0.0f && PixelPos.y < height)
-				{
-					u32 baseX = (u32)PixelPos.x;
-					u32 baseY = (u32)PixelPos.y;
-
-					for (u32 dy = 0; dy < blockSize; dy++)
-					{
-						for (u32 dx = 0; dx < blockSize; dx++)
-						{
-							u32 pixelX = baseX + dx;
-							u32 pixelY = baseY + dy;
-
-							if (pixelX < width && pixelY < height)
-								pixels[pixelY * width + pixelX] = 0xFF00FF00;
-						}
-					}
-				}
+				V3 ShiftedPoint = Points[PointId] + V3(cosf(currentTime), sinf(currentTime), 0);
+				Points[PointId] = ShiftedPoint;
 			}
+
+			DrawTriangle(Points, Colors[TriangleId % 3]);
 		}
 
-		curAngle += frameTime * speed;
+		currentTime += frameTime * speed;
 
-		if (curAngle >= 2.0f * pi)
-			curAngle -= 4.0f * pi;
+		if (currentTime >= 2.0f * pi)
+			currentTime -= 4.0f * pi;
 
 		graphicsContext.ProcessSystemMessages();
 		graphicsContext.RenderFrame();

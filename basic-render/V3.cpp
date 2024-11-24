@@ -2,7 +2,7 @@
 
 V3::V3() : x(0), y(0), z(0) {}
 
-V3::V3(float X, float Y, float Z) : x(X), y(Y), z(Z) {}
+V3::V3(f32 X, f32 Y, f32 Z) : x(X), y(Y), z(Z) {}
 
 V3 V3::operator+(const V3& other) const
 {
