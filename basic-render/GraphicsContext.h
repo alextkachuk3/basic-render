@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <cmath>
+#include <algorithm>
 #include "Typedefs.h"
 #include "AssertUtils.h"
 #include "V2.h"

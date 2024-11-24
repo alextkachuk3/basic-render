@@ -124,18 +124,14 @@ void GraphicsContext::DrawTriangle(const V3* points, const V3* colors) const
 	V2 pointC = ProjectPoint(points[2]);
 
 	i32 minX = (i32)min(min(pointA.x, pointB.x), pointC.x);
-	i32 maxX = (i32)max(max(round(pointA.x), round(pointB.x)), round(pointC.x));
+	i32 maxX = (i32)ceil(max(max(pointA.x, pointB.x), pointC.x));
 	i32 minY = (i32)min(min(pointA.y, pointB.y), pointC.y);
-	i32 maxY = (i32)max(max(round(pointA.y), round(pointB.y)), round(pointC.y));
+	i32 maxY = (i32)ceil(max(max(pointA.y, pointB.y), pointC.y));
 
-	minX = max(0, minX);
-	minX = min(frameBufferWidth - 1, minX);
-	maxX = max(0, maxX);
-	maxX = min(frameBufferWidth - 1, maxX);
-	minY = max(0, minY);
-	minY = min(frameBufferHeight - 1, minY);
-	maxY = max(0, maxY);
-	maxY = min(frameBufferHeight - 1, maxY);
+	minX = std::clamp(minX, 0, (i32)frameBufferWidth - 1);
+	maxX = std::clamp(maxX, 0, (i32)frameBufferWidth - 1);
+	minY = std::clamp(minY, 0, (i32)frameBufferHeight - 1);
+	maxY = std::clamp(maxY, 0, (i32)frameBufferHeight - 1);
 
 	V2 edges[] =
 	{
@@ -157,7 +153,7 @@ void GraphicsContext::DrawTriangle(const V3* points, const V3* colors) const
 	{
 		for (i32 X = minX; X <= maxX; ++X)
 		{
-			V2 pixelPoint = V2(X, Y) + V2(0.5f, 0.5f);
+			V2 pixelPoint = V2((f32)X, (f32)Y) + V2(0.5f, 0.5f);
 
 			V2 pixelEdges[] =
 			{
