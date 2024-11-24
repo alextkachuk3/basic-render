@@ -25,7 +25,7 @@ static LRESULT CALLBACK Win32WindowCallBack(HWND windowHandle, UINT message, WPA
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
-	graphicsContext.Initialize(hInstance, "Render", 1280, 720, Win32WindowCallBack);
+	graphicsContext.Initialize(hInstance, "Render", 1920, 1080, Win32WindowCallBack);
 	graphicsContext.SetIsRunning(true);
 
 	LARGE_INTEGER timerFrequency;
@@ -62,11 +62,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 		}
 
-		std::vector<u32> colors =
+		V3 colors[] =
 		{
-			0xFF00FF00,
-			0xFFFF00FF,
-			0xFF0000FF,
+			V3{1, 0, 0},
+			V3{0, 1, 0},
+			V3{0, 0, 1}
 		};
 
 		for (i32 triangleIndex = 9; triangleIndex >= 0; triangleIndex--)
@@ -85,7 +85,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 				points[pointIndex] = shiftedPoint;
 			}
 
-			graphicsContext.DrawTriangle(points, colors[triangleIndex % colors.size()]);
+			graphicsContext.DrawTriangle(points, colors);
 		}
 
 		currentTime += frameTime * speed;

@@ -18,3 +18,13 @@ V2 V3::getYZ() const
 {
 	return V2(y, z);
 }
+
+V3 V3::operator*(f32 scalar) const
+{
+	return V3(x * scalar, y * scalar, z * scalar);
+}
+
+V3 operator*(f32 scalar, const V3& v3)
+{
+	return V3(v3.x * scalar, v3.y * scalar, v3.z * scalar);
+}
