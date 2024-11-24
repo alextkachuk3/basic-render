@@ -16,7 +16,7 @@ private:
 	u32 frameBufferWidth;
 	u32 frameBufferHeight;
 	u32* frameBufferPixels;
-	float curAngle;
+	f32* zBuffer;
 	bool isRunning;
 
 public:
@@ -24,7 +24,6 @@ public:
 	~GraphicsContext();
 
 	void Initialize(HINSTANCE hInstance, const char* windowTitle, int width, int height, WNDPROC windowCallback);
-	void AllocateFrameBuffer();
 	void ReleaseResources();
 	void ProcessSystemMessages();
 
@@ -45,6 +44,7 @@ public:
 	void SetFrameBufferHeight(u32 height);
 
 	u32* GetFrameBufferPixels() const;
+	f32* GetZBuffer() const;
 
 	bool IsRunning() const;
 	void SetIsRunning(bool running);

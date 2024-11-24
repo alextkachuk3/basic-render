@@ -46,6 +46,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		beginTime = endTime;
 
 		u32* pixels = graphicsContext.GetFrameBufferPixels();
+		f32* zBuffer = graphicsContext.GetZBuffer();
 		u32 width = graphicsContext.GetFrameBufferWidth();
 		u32 height = graphicsContext.GetFrameBufferHeight();
 
@@ -58,35 +59,43 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 				u8 blue = 0;
 				u8 alpha = 255;
 				u32 color = ((u32)alpha << 24) | ((u32)red << 16) | ((u32)green << 8) | (u32)blue;
-				pixels[y * width + x] = color;
+
+				u32 pixelIndex = y * width + x;
+				pixels[pixelIndex] = color;
+				zBuffer[pixelIndex] = FLT_MAX;
 			}
 		}
 
-		V3 colors[] =
+		V3 Positions1[] =
 		{
-			V3{1, 0, 0},
-			V3{0, 1, 0},
-			V3{0, 0, 1}
+			V3(-0.2f, 0.6f, 1.1f),
+			V3(0.7f, -0.4f, 0.9f),
+			V3(-0.7f, -0.4f, 0.9f),
 		};
 
-		for (i32 triangleIndex = 9; triangleIndex >= 0; triangleIndex--)
+		V3 Colors1[] =
 		{
-			f32 distanceToCamera = (f32)pow(2, triangleIndex + 1);
-			V3 points[3] =
-			{
-				V3(-1.0f, -0.5f, distanceToCamera),
-				V3(0, 0.5f, distanceToCamera),
-				V3(1.0f, -0.5f, distanceToCamera),
-			};
+			V3(0.9f, 0.1f, 0.1f),
+			V3(0.1f, 0.9f, 0.1f),
+			V3(0.1f, 0.1f, 0.9f),
+		};
 
-			for (u32 pointIndex = 0; pointIndex < 3; pointIndex++)
-			{
-				V3 shiftedPoint = points[pointIndex] + V3(currentTime, 0.0f, 0.0f);
-				points[pointIndex] = shiftedPoint;
-			}
+		V3 Positions2[] =
+		{
+			V3(-0.2f, 0.6f, 1.1f),
+			V3(0.7f, -0.4f, 1.3f),
+			V3(-0.7f, -0.4f, 0.7f),
+		};
 
-			graphicsContext.DrawTriangle(points, colors);
-		}
+		V3 Colors2[] =
+		{
+			V3(1.0f, 1.0f, 0.0f),
+			V3(0.0f, 1.0f, 1.0f),
+			V3(1.0f, 0.0f, 1.0f),
+		};
+
+		graphicsContext.DrawTriangle(Positions2, Colors2);
+		graphicsContext.DrawTriangle(Positions1, Colors1);
 
 		currentTime += frameTime * speed;
 

@@ -6,7 +6,7 @@ GraphicsContext::GraphicsContext()
 	frameBufferWidth(0),
 	frameBufferHeight(0),
 	frameBufferPixels(nullptr),
-	curAngle(0.0f),
+	zBuffer(nullptr),
 	isRunning(false)
 {
 }
@@ -49,13 +49,8 @@ void GraphicsContext::Initialize(HINSTANCE hInstance, const char* windowTitle, i
 	frameBufferWidth = clientRect.right - clientRect.left;
 	frameBufferHeight = clientRect.bottom - clientRect.top;
 
-	AllocateFrameBuffer();
-}
-
-void GraphicsContext::AllocateFrameBuffer()
-{
-	frameBufferPixels = static_cast<u32*>(malloc(sizeof(u32) * frameBufferWidth * frameBufferHeight));
-	Assert(frameBufferPixels);
+	frameBufferPixels = new u32[frameBufferWidth * frameBufferHeight];
+	zBuffer = new f32[frameBufferWidth * frameBufferHeight];
 }
 
 void GraphicsContext::ReleaseResources()
@@ -64,8 +59,13 @@ void GraphicsContext::ReleaseResources()
 		ReleaseDC(windowHandle, deviceContext);
 	if (frameBufferPixels)
 	{
-		free(frameBufferPixels);
+		delete[] frameBufferPixels;
 		frameBufferPixels = nullptr;
+	}
+	if (zBuffer)
+	{
+		delete[] zBuffer;
+		zBuffer = nullptr;
 	}
 }
 
@@ -173,14 +173,21 @@ void GraphicsContext::DrawTriangle(const V3* points, const V3* colors) const
 				(crossLengths[1] > 0.0f || (isTopLeft[1] && crossLengths[1] == 0.0f)) &&
 				(crossLengths[2] > 0.0f || (isTopLeft[2] && crossLengths[2] == 0.0f)))
 			{
-				u32 pixelId = Y * frameBufferWidth + X;
+				u32 pixelIndex = Y * frameBufferWidth + X;
 
 				f32 t0 = -crossLengths[1] / barycentricDiv;
 				f32 t1 = -crossLengths[2] / barycentricDiv;
 				f32 t2 = -crossLengths[0] / barycentricDiv;
-				V3 finalColor = (t0 * colors[0] + t1 * colors[1] + t2 * colors[2]) * 255.0f;
 
-				frameBufferPixels[pixelId] = ((u32)0xFF << 24) | ((u32)finalColor.r << 16) | ((u32)finalColor.g << 8) | (u32)finalColor.b;
+				f32 depth = 1.0f / (t0 * (1.0f / points[0].z) + t1 * (1.0f / points[1].z) + t2 * (1.0f / points[2].z));
+
+				if (depth < zBuffer[pixelIndex])
+				{
+					V3 finalColor = (t0 * colors[0] + t1 * colors[1] + t2 * colors[2]) * 255.0f;
+					frameBufferPixels[pixelIndex] = ((u32)0xFF << 24) | ((u32)finalColor.r << 16) | ((u32)finalColor.g << 8) | (u32)finalColor.b;
+
+					zBuffer[pixelIndex] = depth;
+				}
 			}
 		}
 	}
@@ -229,6 +236,11 @@ void GraphicsContext::SetFrameBufferHeight(u32 height)
 u32* GraphicsContext::GetFrameBufferPixels() const
 {
 	return frameBufferPixels;
+}
+
+f32* GraphicsContext::GetZBuffer() const
+{
+	return zBuffer;
 }
 
 bool GraphicsContext::IsRunning() const
