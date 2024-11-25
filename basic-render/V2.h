@@ -26,33 +26,33 @@ union V2
 	inline static f32 CrossProduct(V2 A, V2 B);
 };
 
-V2::V2() : x(0), y(0) {}
+inline V2::V2() : x(0), y(0) {}
 
-V2::V2(f32 value) : x(value), y(value) {}
+inline V2::V2(f32 value) : x(value), y(value) {}
 
-V2::V2(f32 X, f32 Y) : x(X), y(Y) {}
+inline V2::V2(f32 X, f32 Y) : x(X), y(Y) {}
 
-V2 V2::operator+(const V2& other) const
+inline V2 V2::operator+(const V2& other) const
 {
 	return V2(x + other.x, y + other.y);
 }
 
-V2 V2::operator-(const V2& other) const
+inline V2 V2::operator-(const V2& other) const
 {
 	return V2(x - other.x, y - other.y);
 }
 
-V2 V2::operator*(f32 scalar) const
+inline V2 V2::operator*(f32 scalar) const
 {
 	return V2(x * scalar, y * scalar);
 }
 
-V2 V2::operator*(const V2& other) const
+inline V2 V2::operator*(const V2& other) const
 {
 	return V2(x * other.x, y * other.y);
 }
 
-V2 V2::operator/(f32 scalar) const
+inline V2 V2::operator/(f32 scalar) const
 {
 	return V2(x / scalar, y / scalar);
 }
