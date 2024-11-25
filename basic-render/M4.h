@@ -1,12 +1,16 @@
 #pragma once
 
 #include "V4.h"
-#include <math.h>
+#include <cmath>
 
 union M4
 {
 	V4 v[4];
 	f32 e[16];
+
+	inline M4(const V4& row0, const V4& row1, const V4& row2, const V4& row3);
+
+	inline M4();
 
 	inline static M4 Identity();
 	inline static M4 Scale(f32 X, f32 Y, f32 Z);
@@ -17,53 +21,70 @@ union M4
 	inline M4 operator*(const M4& B) const;
 };
 
+inline M4::M4(const V4& row0, const V4& row1, const V4& row2, const V4& row3)
+{
+	v[0] = row0;
+	v[1] = row1;
+	v[2] = row2;
+	v[3] = row3;
+}
+
+inline M4::M4() : v{ V4(), V4(), V4(), V4() } {}
+
 inline M4 M4::Identity()
 {
-	M4 Result = {};
-	Result.v[0] = V4(1.0f, 0.0f, 0.0f, 0.0f);
-	Result.v[1] = V4(0.0f, 1.0f, 0.0f, 0.0f);
-	Result.v[2] = V4(0.0f, 0.0f, 1.0f, 0.0f);
-	Result.v[3] = V4(0.0f, 0.0f, 0.0f, 1.0f);
-	return Result;
+	return M4(
+		V4(1.0f, 0.0f, 0.0f, 0.0f),
+		V4(0.0f, 1.0f, 0.0f, 0.0f),
+		V4(0.0f, 0.0f, 1.0f, 0.0f),
+		V4(0.0f, 0.0f, 0.0f, 1.0f)
+	);
 }
 
 inline M4 M4::Scale(f32 X, f32 Y, f32 Z)
 {
-	M4 Result = Identity();
-	Result.v[0].x = X;
-	Result.v[1].y = Y;
-	Result.v[2].z = Z;
-	return Result;
+	return M4(
+		V4(X, 0.0f, 0.0f, 0.0f),
+		V4(0.0f, Y, 0.0f, 0.0f),
+		V4(0.0f, 0.0f, Z, 0.0f),
+		V4(0.0f, 0.0f, 0.0f, 1.0f)
+	);
 }
 
 inline M4 M4::Rotation(f32 X, f32 Y, f32 Z)
 {
-	M4 RotateX = Identity();
-	RotateX.v[1].y = cos(X);
-	RotateX.v[2].y = -sin(X);
-	RotateX.v[1].z = sin(X);
-	RotateX.v[2].z = cos(X);
+	M4 RotateX(
+		V4(1.0f, 0.0f, 0.0f, 0.0f),
+		V4(0.0f, cos(X), -sin(X), 0.0f),
+		V4(0.0f, sin(X), cos(X), 0.0f),
+		V4(0.0f, 0.0f, 0.0f, 1.0f)
+	);
 
-	M4 RotateY = Identity();
-	RotateY.v[0].x = cos(Y);
-	RotateY.v[2].x = -sin(Y);
-	RotateY.v[0].z = sin(Y);
-	RotateY.v[2].z = cos(Y);
+	M4 RotateY(
+		V4(cos(Y), 0.0f, sin(Y), 0.0f),
+		V4(0.0f, 1.0f, 0.0f, 0.0f),
+		V4(-sin(Y), 0.0f, cos(Y), 0.0f),
+		V4(0.0f, 0.0f, 0.0f, 1.0f)
+	);
 
-	M4 RotateZ = Identity();
-	RotateZ.v[0].x = cos(Z);
-	RotateZ.v[1].x = -sin(Z);
-	RotateZ.v[0].y = sin(Z);
-	RotateZ.v[1].y = cos(Z);
+	M4 RotateZ(
+		V4(cos(Z), -sin(Z), 0.0f, 0.0f),
+		V4(sin(Z), cos(Z), 0.0f, 0.0f),
+		V4(0.0f, 0.0f, 1.0f, 0.0f),
+		V4(0.0f, 0.0f, 0.0f, 1.0f)
+	);
 
 	return RotateZ * RotateY * RotateX;
 }
 
 inline M4 M4::Translation(f32 X, f32 Y, f32 Z)
 {
-	M4 Result = Identity();
-	Result.v[3].xyz = V3(X, Y, Z);
-	return Result;
+	return M4(
+		V4(1.0f, 0.0f, 0.0f, 0.0f),
+		V4(0.0f, 1.0f, 0.0f, 0.0f),
+		V4(0.0f, 0.0f, 1.0f, 0.0f),
+		V4(X, Y, Z, 1.0f)
+	);
 }
 
 inline V4 M4::operator*(const V4& B) const
@@ -73,10 +94,10 @@ inline V4 M4::operator*(const V4& B) const
 
 inline M4 M4::operator*(const M4& B) const
 {
-	M4 Result = {};
-	Result.v[0] = (*this) * B.v[0];
-	Result.v[1] = (*this) * B.v[1];
-	Result.v[2] = (*this) * B.v[2];
-	Result.v[3] = (*this) * B.v[3];
-	return Result;
+	return M4(
+		*this * B.v[0],
+		*this * B.v[1],
+		*this * B.v[2],
+		*this * B.v[3]
+	);
 }
