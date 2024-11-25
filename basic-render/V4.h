@@ -31,6 +31,7 @@ union V4
 
 	inline V4();
 	inline V4(float X, float Y, float Z, float W);
+	inline V4(V3 v3, float W);
 
 	inline static V4 FromV3(const V3& A, float W);
 
@@ -41,6 +42,8 @@ union V4
 inline V4::V4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 
 inline V4::V4(float X, float Y, float Z, float W) : x(X), y(Y), z(Z), w(W) {}
+
+inline V4::V4(V3 v3, float W) : x(v3.x), y(v3.y), z(v3.z), w(W) {}
 
 inline V4 V4::FromV3(const V3& A, float W)
 {

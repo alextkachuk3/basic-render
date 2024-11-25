@@ -5,6 +5,7 @@
 #include "GraphicsContext.h"
 #include "V2.h"
 #include "V3.h"
+#include "M4.h"
 
 static const f32 pi = 3.14159265359f;
 
@@ -66,41 +67,72 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 		}
 
-		V3 Positions1[] =
-		{
-			V3(-0.2f, 0.6f, 1.1f),
-			V3(0.7f, -0.4f, 0.9f),
-			V3(-0.7f, -0.4f, 0.9f),
-		};
+        currentTime += frameTime * speed;
+        if (currentTime > 2.0f * 3.14159f)
+        {
+            currentTime -= 2.0f * 3.14159f;
+        }
 
-		V3 Colors1[] =
-		{
-			V3(0.9f, 0.1f, 0.1f),
-			V3(0.1f, 0.9f, 0.1f),
-			V3(0.1f, 0.1f, 0.9f),
-		};
+        V3 ModelVertices[] =
+        {
+            V3(-0.5f, -0.5f, -0.5f),
+            V3(-0.5f, 0.5f, -0.5f),
+            V3(0.5f, 0.5f, -0.5f),
+            V3(0.5f, -0.5f, -0.5f),
 
-		V3 Positions2[] =
-		{
-			V3(-0.2f, 0.6f, 1.1f),
-			V3(0.7f, -0.4f, 1.3f),
-			V3(-0.7f, -0.4f, 0.7f),
-		};
+            V3(-0.5f, -0.5f, 0.5f),
+            V3(-0.5f, 0.5f, 0.5f),
+            V3(0.5f, 0.5f, 0.5f),
+            V3(0.5f, -0.5f, 0.5f),
+        };
 
-		V3 Colors2[] =
-		{
-			V3(1.0f, 1.0f, 0.0f),
-			V3(0.0f, 1.0f, 1.0f),
-			V3(1.0f, 0.0f, 1.0f),
-		};
+        V3 ModelColors[] =
+        {
+            V3(1, 0, 0),
+            V3(0, 0, 1),
+            V3(0.2f, 0.8f, 0.2f),
+            V3(1, 0, 1),
+            V3(1, 1, 0),  
+            V3(1, 0.5f, 0),
+            V3(0.5f, 0, 0.5f),            
+            V3(0.2f, 0.2f, 1),
+        };
 
-		graphicsContext.DrawTriangle(Positions2, Colors2);
-		graphicsContext.DrawTriangle(Positions1, Colors1);
+        u32 ModelIndices[] =
+        {
+            0, 1, 2,
+            2, 3, 0,
 
-		currentTime += frameTime * speed;
+            6, 5, 4,
+            4, 7, 6,
 
-		if (currentTime >= 2.0f * pi)
-			currentTime = -2.0f * pi;
+            4, 5, 1,
+            1, 0, 4,
+
+            3, 2, 6,
+            6, 7, 3,
+
+            1, 5, 6,
+            6, 2, 1,
+
+            4, 0, 3,
+            3, 7, 4,
+        };
+
+        f32 offset = abs(sin(currentTime));
+
+        M4 transform = (M4::Translation(0, 0, 3) * M4::Rotation(currentTime, currentTime, currentTime) * M4::Scale(1, 1, 1));
+
+        for (u32 i = 0; i < 36; i += 3)
+        {
+            u32 Index0 = ModelIndices[i + 0];
+            u32 Index1 = ModelIndices[i + 1];
+            u32 Index2 = ModelIndices[i + 2];
+
+            graphicsContext.DrawTriangle(ModelVertices[Index0], ModelVertices[Index1], ModelVertices[Index2],
+                ModelColors[Index0], ModelColors[Index1], ModelColors[Index2],
+                transform);
+        }
 
 		graphicsContext.ProcessSystemMessages();
 		graphicsContext.RenderFrame();

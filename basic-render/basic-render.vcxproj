@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClInclude Include="AssertUtils.h" />
     <ClInclude Include="GraphicsContext.h" />
+    <ClInclude Include="M4.h" />
     <ClInclude Include="Typedefs.h" />
     <ClInclude Include="V2.h" />
     <ClInclude Include="V3.h" />
