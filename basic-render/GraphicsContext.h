@@ -7,6 +7,8 @@
 #include "AssertUtils.h"
 #include "V2.h"
 #include "V3.h"
+#include "V4.h"
+#include "M4.h"
 
 class GraphicsContext
 {
@@ -30,6 +32,7 @@ public:
 	void RenderFrame() const;
 	V2 ProjectPoint(V3 pos) const;
 	void DrawTriangle(const V3* points, const V3* colors) const;
+	void DrawTriangle(V3 ModelVertex0, V3 ModelVertex1, V3 ModelVertex2, V3 ModelColor0, V3 ModelColor1, V3 ModelColor2, M4 Transform) const;
 
 	HWND GetWindowHandle() const;
 	void SetWindowHandle(HWND handle);
